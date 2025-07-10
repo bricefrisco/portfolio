@@ -10,35 +10,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '22.16.0'
+#
+#      - name: Install dependencies
+#        run: npm install
+#
+#      - name: Build vite project
+#        run: npm run build
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.16.0'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build vite project
-        run: npm run build
-
-      - name: Set up SSH
+      - name: Install cloudflared
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -T 30 -H ${{ secrets.PI_HOST }} >> ~/.ssh/known_hosts || true
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+          chmod +x cloudflared
+          sudo mv cloudflared /usr/local/bin/
 
-      - name: Clean target directory on Pi
+      - name: Connect and deploy to Raspberry Pi
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          ssh ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "rm -rf /var/www/portfolio/*"
+          cloudflared access ssh \
+            --hostname ${{ secrets.PI_HOST }} \
+            --id $CF_ACCESS_CLIENT_ID \
+            --secret $CF_ACCESS_CLIENT_SECRET \
+            -- ssh ${{ secrets.PI_USER }}@localhost -p 2222 "echo 'Connected from Github!'"
 
-      - name: Copy build files to Pi
-        run: |
-          scp -r dist/* ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/portfolio/
-
-      - name: Restart nginx
-        run: |
-          ssh ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "sudo systemctl restart nginx"
+#      - name: Copy build files to Pi
+#        run: |
+#          scp -r dist/* ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/portfolio/
+#
+#      - name: Restart nginx
+#        run: |
+#          ssh ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "sudo systemctl restart nginx"
