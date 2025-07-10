@@ -44,6 +44,7 @@ jobs:
           --id '${{ secrets.CF_ACCESS_CLIENT_ID }}' \
           --secret '${{ secrets.CF_ACCESS_CLIENT_SECRET }}' \
           --hostname ${{ secrets.PI_HOST }}" \
+          -o StrictHostKeyChecking=no \
           "${{ secrets.PI_USER }}@localhost" \
           "echo 'Connected from GitHub!'"
 
