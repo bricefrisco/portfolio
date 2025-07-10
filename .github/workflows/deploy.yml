@@ -31,15 +31,12 @@ jobs:
           sudo mv cloudflared /usr/local/bin/
 
       - name: Connect and deploy to Raspberry Pi
-        env:
-          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
-          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: |
-          cloudflared access ssh \
-            --hostname ${{ secrets.PI_HOST }} \
-            --id $CF_ACCESS_CLIENT_ID \
-            --secret $CF_ACCESS_CLIENT_SECRET \
-            -- ssh ${{ secrets.PI_USER }}@localhost -p 2222 "echo 'Connected from Github!'"
+          echo "Connecting via SSH..."
+          ssh -o ProxyCommand="cloudflared access ssh --id '${{ secrets.CF_ACCESS_CLIENT_ID }}' --secret '${{ secrets.CF_ACCESS_CLIENT_SECRET }}' --hostname ${{ secrets.PI_HOST }}" \
+          -o StrictHostKeyChecking=no \
+          "${{ secrets.PI_USER }}@localhost" \
+          "echo 'Connected from GitHub!'"
 
 #      - name: Copy build files to Pi
 #        run: |
