@@ -10,25 +10,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v4
-#
-#      - name: Set up Node.js
-#        uses: actions/setup-node@v4
-#        with:
-#          node-version: '22.16.0'
-#
-#      - name: Install dependencies
-#        run: npm install
-#
-#      - name: Build vite project
-#        run: npm run build
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build vite project
+        run: npm run build
 
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/pi_id_ed25519
+          chmod 600 ~/.ssh/pi_id_ed25519
+          
+          cat <<EOF > ~/.ssh/config
+          Host pi
+            HostName localhost
+            User ${{ secrets.PI_USER }}
+            IdentityFile ~/.ssh/pi_id_ed25519
+            UserKnownHostsFile=/dev/null
+            StrictHostKeyChecking no
+            ProxyCommand cloudflared access ssh --id ${{ secrets.CF_ACCESS_CLIENT_ID }} --secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }} --hostname ${{ secrets.PI_HOST }}
+          EOF
 
       - name: Install cloudflared
         run: |
@@ -38,17 +48,17 @@ jobs:
 
       - name: Connect and deploy to Raspberry Pi
         run: |
-          echo "Connecting via SSH..."
+          echo "Deploying"
           ssh -o ProxyCommand="cloudflared access ssh --id '${{ secrets.CF_ACCESS_CLIENT_ID }}' --secret '${{ secrets.CF_ACCESS_CLIENT_SECRET }}' --hostname ${{ secrets.PI_HOST }}" \
           -o UserKnownHostsFile=/dev/null \
           -o StrictHostKeyChecking=no \
           "${{ secrets.PI_USER }}@localhost" \
           "echo 'Connected from GitHub!'"
 
-#      - name: Copy build files to Pi
-#        run: |
-#          scp -r dist/* ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/portfolio/
-#
-#      - name: Restart nginx
-#        run: |
-#          ssh ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "sudo systemctl restart nginx"
+      - name: Copy build files to Pi
+        run: |
+          scp -r dist/* pi:/var/www/portfolio/
+
+      - name: Restart nginx
+        run: |
+          ssh pi "sudo systemctl restart nginx"
