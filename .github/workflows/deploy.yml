@@ -1,0 +1,44 @@
+name: Deploy Vite Site to Raspberry Pi
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build vite project
+        run: npm run build
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.PI_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Clean target directory on Pi
+        run: |
+          ssh ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "rm -rf /var/www/portfolio/*"
+
+      - name: Copy build files to Pi
+        run: |
+          scp -r dist/* ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/var/www/portfolio/
+
+      - name: Restart nginx
+        run: |
+          ssh ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "sudo systemctl restart nginx"
