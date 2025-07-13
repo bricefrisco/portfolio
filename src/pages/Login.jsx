@@ -6,7 +6,7 @@ import { Strong, Text, TextLink } from "../catalyst/text.jsx";
 import { Button } from "../catalyst/button.jsx";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import Alert from "../components/Alert.jsx";
+import AlertError from "../components/AlertError.jsx";
 import pb from "../lib/pocketbase.js";
 
 const Login = () => {
@@ -66,13 +66,13 @@ const Login = () => {
           <Input required minLength={8} type="password" name="password" />
           <div className="mt-2 text-right">
             <Text>
-              <TextLink href="/password-reset">
+              <TextLink href="/reset-password">
                 <Strong>Forgot password?</Strong>
               </TextLink>
             </Text>
           </div>
         </Field>
-        {failedLogin && <Alert>Invalid username or password.</Alert>}
+        {failedLogin && <AlertError>Invalid username or password.</AlertError>}
         <Button type="submit" className="w-full" disabled={loading}>
           Login
         </Button>

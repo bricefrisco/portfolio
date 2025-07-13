@@ -1,6 +1,6 @@
 import { XCircleIcon } from "@heroicons/react/20/solid";
 
-const Alert = ({ children }) => {
+const AlertError = ({ children }) => {
   return (
     <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
       <div className="flex">
@@ -20,4 +20,4 @@ const Alert = ({ children }) => {
   );
 };
 
-export default Alert;
+export default AlertError;

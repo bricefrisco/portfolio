@@ -6,7 +6,7 @@ import { Strong, Text, TextLink } from "../catalyst/text.jsx";
 import { Button } from "../catalyst/button.jsx";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import Alert from "../components/Alert.jsx";
+import AlertError from "../components/AlertError.jsx";
 import pb from "../lib/pocketbase.js";
 
 const Login = () => {
@@ -75,7 +75,7 @@ const Login = () => {
           <Label>Password</Label>
           <Input required minLength={8} type="password" name="password" />
         </Field>
-        {failedRegistration && <Alert>{failedRegistration}</Alert>}
+        {failedRegistration && <AlertError>{failedRegistration}</AlertError>}
         <Button type="submit" className="w-full" disabled={loading}>
           Create account
         </Button>
