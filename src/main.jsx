@@ -4,6 +4,7 @@ import Home from "./pages/Home.jsx";
 import { BrowserRouter, Route, Routes } from "react-router";
 import Login from "./pages/Login.jsx";
 import "./index.css";
+import Register from "./pages/Register.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -11,6 +12,7 @@ createRoot(document.getElementById("root")).render(
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

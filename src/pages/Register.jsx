@@ -12,7 +12,7 @@ import pb from "../lib/pocketbase.js";
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [failedLogin, setFailedLogin] = useState(false);
+  const [failedRegistration, setFailedRegistration] = useState("");
 
   const redirect = useCallback(() => {
     const redirectPath = localStorage.getItem("redirect");
@@ -32,20 +32,30 @@ const Login = () => {
 
   const submit = async (e) => {
     e.preventDefault();
-    setFailedLogin(false);
+    setFailedRegistration("");
     setLoading(true);
 
     const formData = new FormData(e.target);
     try {
       setLoading(true);
+
+      await pb.collection("users").create({
+        email: formData.get("email"),
+        password: formData.get("password"),
+        passwordConfirm: formData.get("password"),
+      });
+
       await pb
         .collection("users")
         .authWithPassword(formData.get("email"), formData.get("password"));
       redirect();
     } catch (error) {
-      setFailedLogin(true);
       setLoading(false);
-      console.warn(error);
+      if (error?.response?.data?.email?.code === "validation_not_unique") {
+        setFailedRegistration("Email already registered!");
+      } else {
+        setFailedRegistration("Error occurred during registration.");
+      }
     }
   };
 
@@ -56,7 +66,7 @@ const Login = () => {
         method="POST"
         className="grid w-full max-w-sm grid-cols-1 gap-8"
       >
-        <Heading>Sign in to your account</Heading>
+        <Heading>Create your account</Heading>
         <Field>
           <Label htmlFor="email">Email</Label>
           <Input required type="email" name="email" />
@@ -64,22 +74,15 @@ const Login = () => {
         <Field>
           <Label>Password</Label>
           <Input required minLength={8} type="password" name="password" />
-          <div className="mt-2 text-right">
-            <Text>
-              <TextLink href="/password-reset">
-                <Strong>Forgot password?</Strong>
-              </TextLink>
-            </Text>
-          </div>
         </Field>
-        {failedLogin && <Alert>Invalid username or password.</Alert>}
+        {failedRegistration && <Alert>{failedRegistration}</Alert>}
         <Button type="submit" className="w-full" disabled={loading}>
-          Login
+          Create account
         </Button>
         <Text>
-          Don’t have an account?{" "}
-          <TextLink href="/register">
-            <Strong>Sign up</Strong>
+          Already have an account?{" "}
+          <TextLink href="/login">
+            <Strong>Sign in</Strong>
           </TextLink>
         </Text>
       </form>
